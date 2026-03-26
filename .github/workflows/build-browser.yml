@@ -350,7 +350,16 @@ jobs:
           fi
 
       - name: Build extension
-        run: npm run ${{matrix.license_type.npm_command_prefix}}${{ matrix.browser.npm_command_suffix }}
+        # run: npm run ${{matrix.license_type.npm_command_prefix}}${{ matrix.browser.npm_command_suffix }}
+        run: |
+          if [[ "${{ matrix.browser.name }}" == "edge" ]]; then
+            # 生产构建 Edge
+            cd apps/browser
+            cross-env BROWSER=edge MANIFEST_VERSION=3 NODE_ENV=production webpack
+          else
+            # 其他浏览器使用原有构建命令
+            npm run ${{matrix.license_type.npm_command_prefix}}${{ matrix.browser.npm_command_suffix }}
+          fi
         working-directory: browser-source/apps/browser
 
       - name: Upload extension artifact
@@ -371,25 +380,6 @@ jobs:
         with:
           name: ${{ matrix.license_type.artifact_prefix }}${{ matrix.browser.artifact_name_dev }}-${{ env._BUILD_NUMBER }}.zip
           path: browser-source/apps/browser/dist/${{matrix.license_type.archive_name_prefix}}${{ matrix.browser.archive_name_dev }}
-          if-no-files-found: error
-
-      # 为 Edge 单独构建生产版本（使用 NODE_ENV=production）
-      - name: Build production extension for Edge
-        if: ${{ matrix.browser.name == 'edge' }}
-        run: |
-          cd browser-source/apps/browser
-          cross-env BROWSER=edge MANIFEST_VERSION=3 NODE_ENV=production webpack
-          # 将生产版输出重命名为带 -prod 的 zip
-          mv dist/${{matrix.license_type.archive_name_prefix}}${{ matrix.browser.archive_name }} \
-             dist/${{matrix.license_type.archive_name_prefix}}prod-${{ matrix.browser.archive_name }}
-        working-directory: browser-source
-
-      - name: Upload production extension artifact for Edge
-        if: ${{ matrix.browser.name == 'edge' }}
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
-        with:
-          name: ${{ matrix.license_type.artifact_prefix }}prod-${{ matrix.browser.artifact_name }}-${{ env._BUILD_NUMBER }}.zip
-          path: browser-source/apps/browser/dist/${{matrix.license_type.archive_name_prefix}}prod-${{ matrix.browser.archive_name }}
           if-no-files-found: error
   build-safari:
     name: Build Safari - ${{ matrix.license_type.readable }}
