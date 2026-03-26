@@ -354,8 +354,8 @@ jobs:
         run: |
           if [[ "${{ matrix.browser.name }}" == "edge" ]]; then
             # 生产构建 Edge
-            cd apps/browser
-            cross-env BROWSER=edge MANIFEST_VERSION=3 NODE_ENV=production webpack
+            # cd apps/browser
+             cross-env BROWSER=edge MANIFEST_VERSION=3 NODE_ENV=production webpack
           else
             # 其他浏览器使用原有构建命令
             npm run ${{matrix.license_type.npm_command_prefix}}${{ matrix.browser.npm_command_suffix }}
